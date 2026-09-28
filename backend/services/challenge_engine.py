@@ -116,9 +116,7 @@ def challenge_investigation(decision: dict):
         max(storage_capacity - current_storage, 0),
     )
 
-    # =========================================================
-    # 1. FORECAST CHECKS
-    # =========================================================
+
 
     if forecast_status == "stale":
         challenges.append(
@@ -175,10 +173,6 @@ def challenge_investigation(decision: dict):
                 "with observed sales."
             )
 
-    # =========================================================
-    # 2. INVENTORY CHECKS
-    # =========================================================
-
     if current_quantity < 0:
         challenges.append(
             {
@@ -208,9 +202,7 @@ def challenge_investigation(decision: dict):
             "Reserved inventory is within current stock."
         )
 
-    # =========================================================
-    # 3. EXISTING PURCHASE ORDERS
-    # =========================================================
+
 
     if open_orders > 0:
         warnings.append(
@@ -229,16 +221,7 @@ def challenge_investigation(decision: dict):
             "No open purchase orders were found."
         )
 
-    # =========================================================
-    # 4. ORIGINAL PURCHASING SYSTEM RECOMMENDATION
-    #
-    # These checks explain WHY PROP may need to modify
-    # the original recommendation.
-    #
-    # They are deliberately NOT added to "challenges".
-    # Otherwise an invalid original recommendation would
-    # incorrectly block PROP's corrected recommendation.
-    # =========================================================
+
 
     original_cost = (
         original_quantity * unit_price
@@ -317,10 +300,6 @@ def challenge_investigation(decision: dict):
                 "Supplier can fulfill the original recommendation."
             )
 
-    # =========================================================
-    # 5. PROP'S FINAL RECOMMENDATION
-    # =========================================================
-
     recommended_cost = (
         recommended_quantity * unit_price
     )
@@ -395,10 +374,6 @@ def challenge_investigation(decision: dict):
                 }
             )
 
-    # =========================================================
-    # 6. MOQ CHECK
-    # =========================================================
-
     if (
         recommended_quantity > 0
         and recommended_quantity < minimum_order_quantity
@@ -421,10 +396,6 @@ def challenge_investigation(decision: dict):
             "Recommended quantity satisfies the supplier MOQ."
         )
 
-    # =========================================================
-    # 7. LEAD TIME CHECK
-    # =========================================================
-
     if forecast_gap > 0 and lead_time_days > 7:
         warnings.append(
             {
@@ -440,10 +411,6 @@ def challenge_investigation(decision: dict):
         passed_checks.append(
             "Supplier lead time does not create a major risk."
         )
-
-    # =========================================================
-    # 8. DEMAND GAP
-    # =========================================================
 
     if forecast_gap > 0:
         warnings.append(
@@ -466,10 +433,6 @@ def challenge_investigation(decision: dict):
                 ),
             }
         )
-
-    # =========================================================
-    # 9. DETERMINE BUSINESS DECISION
-    # =========================================================
 
     original_recommendation_problem = (
         original_quantity > 0
@@ -512,10 +475,6 @@ def challenge_investigation(decision: dict):
 
         business_decision = "MODIFY"
 
-    # =========================================================
-    # 10. CHALLENGE STATUS
-    # =========================================================
-
     high_severity_count = sum(
         1
         for item in challenges
@@ -544,10 +503,6 @@ def challenge_investigation(decision: dict):
 
         challenge_status = "PASSED"
 
-    # =========================================================
-    # 11. CAN THE FINAL PROP RECOMMENDATION PROCEED?
-    # =========================================================
-
     can_proceed = (
         business_decision
         in [
@@ -567,9 +522,6 @@ def challenge_investigation(decision: dict):
         or business_decision == "INVESTIGATE_FURTHER"
     )
 
-    # =========================================================
-    # 12. CHALLENGE ID
-    # =========================================================
 
     challenge_id = (
         "PROP-CHALLENGE-"
