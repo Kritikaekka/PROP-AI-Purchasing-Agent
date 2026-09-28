@@ -178,35 +178,19 @@ def investigate_agent(
     store_id: str,
     product_id: str,
 ):
-    # ---------------------------------------------------------
-    # 1. INVESTIGATE
-    # ---------------------------------------------------------
-
     investigation = investigate_purchase(
         store_id=store_id,
         product_id=product_id,
     )
 
-    # ---------------------------------------------------------
-    # 2. CHALLENGE
-    # ---------------------------------------------------------
-
     challenge = challenge_investigation(
         investigation
     )
-
-    # ---------------------------------------------------------
-    # 3. DECIDE
-    # ---------------------------------------------------------
 
     final_decision = make_final_decision(
         investigation=investigation,
         challenge=challenge,
     )
-
-    # ---------------------------------------------------------
-    # 4. SAVE COMPLETE DECISION
-    # ---------------------------------------------------------
 
     decisions_collection.update_one(
         {
@@ -222,7 +206,6 @@ def investigate_agent(
         },
     )
 
-    # Include all stages in the API response.
     investigation["challenge"] = challenge
     investigation["final_decision"] = final_decision
 

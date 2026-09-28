@@ -1,6 +1,5 @@
 from datetime import datetime
 
-
 def make_final_decision(investigation: dict, challenge: dict):
     recommendation = investigation.get("recommendation", {})
 
@@ -14,12 +13,6 @@ def make_final_decision(investigation: dict, challenge: dict):
         False,
     )
 
-    # Business-level decision made by the challenge stage.
-    # Expected values:
-    # ACCEPT
-    # MODIFY
-    # REJECT
-    # INVESTIGATE_FURTHER
     business_decision = challenge.get(
         "business_decision",
         "INVESTIGATE_FURTHER",
@@ -30,9 +23,6 @@ def make_final_decision(investigation: dict, challenge: dict):
         "NO_PURCHASE",
     )
 
-    # The original quantity comes from the purchasing system's
-    # recommendation, while recommendation["quantity"] is
-    # PROP's independently calculated quantity.
     original_quantity = recommendation.get(
         "original_quantity",
         recommendation.get("quantity", 0),
@@ -47,9 +37,6 @@ def make_final_decision(investigation: dict, challenge: dict):
         "supplier_id"
     )
 
-    # First try to get the original cost from the investigation.
-    # If it is not present there, use the value calculated by
-    # the challenge engine.
     original_estimated_cost = recommendation.get(
         "original_estimated_cost_inr",
         challenge.get(
@@ -67,10 +54,6 @@ def make_final_decision(investigation: dict, challenge: dict):
     )
 
     decided_at = datetime.now().isoformat()
-
-    # ---------------------------------------------------------
-    # INVESTIGATE FURTHER
-    # ---------------------------------------------------------
 
     if business_decision == "INVESTIGATE_FURTHER":
         return {
@@ -95,10 +78,6 @@ def make_final_decision(investigation: dict, challenge: dict):
             "decided_at": decided_at,
         }
 
-    # ---------------------------------------------------------
-    # REJECT
-    # ---------------------------------------------------------
-
     if business_decision == "REJECT":
         return {
             "decision_stage": "DECIDE",
@@ -121,10 +100,6 @@ def make_final_decision(investigation: dict, challenge: dict):
             "challenge_status": challenge_status,
             "decided_at": decided_at,
         }
-
-    # ---------------------------------------------------------
-    # ACCEPT
-    # ---------------------------------------------------------
 
     if (
         business_decision == "ACCEPT"
@@ -152,10 +127,6 @@ def make_final_decision(investigation: dict, challenge: dict):
             "challenge_status": challenge_status,
             "decided_at": decided_at,
         }
-
-    # ---------------------------------------------------------
-    # MODIFY
-    # ---------------------------------------------------------
 
     if (
         business_decision == "MODIFY"
@@ -187,10 +158,6 @@ def make_final_decision(investigation: dict, challenge: dict):
             "decided_at": decided_at,
         }
 
-    # ---------------------------------------------------------
-    # NO PURCHASE FROM ORIGINAL RECOMMENDATION
-    # ---------------------------------------------------------
-
     if original_action == "NO_PURCHASE":
         return {
             "decision_stage": "DECIDE",
@@ -217,10 +184,6 @@ def make_final_decision(investigation: dict, challenge: dict):
             "decided_at": decided_at,
         }
 
-    # ---------------------------------------------------------
-    # ORIGINAL RECOMMENDATION REQUIRES FORECAST REVIEW
-    # ---------------------------------------------------------
-
     if original_action == "REVIEW_FORECAST":
         return {
             "decision_stage": "DECIDE",
@@ -242,10 +205,6 @@ def make_final_decision(investigation: dict, challenge: dict):
             "challenge_status": challenge_status,
             "decided_at": decided_at,
         }
-
-    # ---------------------------------------------------------
-    # SAFE FALLBACK
-    # ---------------------------------------------------------
 
     return {
         "decision_stage": "DECIDE",

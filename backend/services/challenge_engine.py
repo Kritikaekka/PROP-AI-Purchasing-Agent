@@ -1,6 +1,5 @@
 from datetime import datetime
 
-
 def challenge_investigation(decision: dict):
     evidence = decision.get("evidence", {})
     analysis = decision.get("analysis", {})
@@ -452,27 +451,21 @@ def challenge_investigation(decision: dict):
     )
 
     if forecast_status == "stale":
-
         business_decision = "INVESTIGATE_FURTHER"
 
     elif recommended_quantity <= 0:
-
         business_decision = "REJECT"
 
     elif not final_quantity_feasible:
-
         business_decision = "INVESTIGATE_FURTHER"
 
     elif original_recommendation_problem:
-
         business_decision = "MODIFY"
 
     elif original_quantity == recommended_quantity:
-
         business_decision = "ACCEPT"
 
     else:
-
         business_decision = "MODIFY"
 
     high_severity_count = sum(
@@ -488,19 +481,15 @@ def challenge_investigation(decision: dict):
     )
 
     if high_severity_count > 0:
-
         challenge_status = "BLOCKED"
 
     elif medium_severity_count > 0:
-
         challenge_status = "REVIEW"
 
     elif warnings or recommendation_issues:
-
         challenge_status = "CAUTION"
 
     else:
-
         challenge_status = "PASSED"
 
     can_proceed = (
@@ -515,8 +504,6 @@ def challenge_investigation(decision: dict):
         == "CREATE_PURCHASE_ORDER"
     )
 
-    # Human approval is still required for every executable
-    # purchasing action.
     human_review_required = (
         can_proceed
         or business_decision == "INVESTIGATE_FURTHER"
@@ -529,10 +516,6 @@ def challenge_investigation(decision: dict):
             "%Y%m%d%H%M%S%f"
         )
     )
-
-    # =========================================================
-    # 13. RETURN COMPLETE CHALLENGE RESULT
-    # =========================================================
 
     return {
         "challenge_id": challenge_id,
@@ -583,11 +566,6 @@ def challenge_investigation(decision: dict):
         "warnings": warnings,
 
         "passed_checks": passed_checks,
-
-        # -----------------------------------------------------
-        # Keep the existing aura_* JSON keys for compatibility
-        # with the current frontend and other backend services.
-        # -----------------------------------------------------
 
         "recommendation_review": {
             "original_quantity": original_quantity,

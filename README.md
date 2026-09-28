@@ -1,286 +1,118 @@
-# AURA — AI Purchasing Agent
+# PROP — AI Purchasing Agent
 
-AURA is an AI-assisted purchasing decision system designed to investigate
-inventory and demand conditions, challenge the recommendation for safety,
-request human approval, execute a purchase order, and validate the outcome.
+PROP is a purchasing assistant that reviews an existing purchase recommendation, checks it against current business data and constraints, and proposes an action.
 
-The system demonstrates an end-to-end purchasing workflow:
+The system does not directly place an order from the original recommendation. It first investigates the available data, checks the recommendation, makes an independent decision, asks for human approval, and validates the result after execution.
 
-INVESTIGATE → CHALLENGE → DECIDE → HUMAN APPROVAL → EXECUTE → VALIDATE
+## How It Works
 
+The main flow is:
 
-## 1. Problem
+**Review → Check → Recommend → Approve → Order → Verify**
 
-A purchasing system should not blindly create purchase orders whenever
-inventory is low.
+1. The user submits an existing purchase recommendation.
+2. PROP collects the relevant inventory, sales, forecast, supplier and business-rule data.
+3. The original recommendation is checked against the available constraints.
+4. PROP calculates its own required quantity.
+5. The system produces a decision:
+   - ACCEPT
+   - MODIFY
+   - REJECT
+   - INVESTIGATE FURTHER
+6. A human must approve the final purchase before execution.
+7. The purchase order is created and the relevant records are updated.
+8. The validation step checks whether the expected changes actually happened.
 
-AURA evaluates multiple signals before taking action:
+## Example
 
-- Current inventory
-- Reserved inventory
-- Historical sales
-- Average daily demand
-- Demand forecast
-- Open purchase orders
-- Supplier availability
-- Minimum order quantity
-- Supplier lead time
-- Unit price
+The included demo starts with an original recommendation of **800 units**.
 
-The system then challenges the recommendation before execution.
+PROP finds:
 
-A human approval step is required before a purchase order can be created.
-
-
-## 2. Solution
-
-AURA separates the purchasing workflow into six stages.
-
-### 1. Investigate
-
-Collects evidence from the database:
-
-- Inventory
-- Sales history
-- Forecast
-- Open purchase orders
-- Supplier information
-
-The investigation engine calculates:
-
-- Average daily sales
-- Forecast gap
-- Demand signal
-- Inventory risk
-- Recommended purchase quantity
-- Estimated purchase cost
-
-
-### 2. Challenge
-
-The Challenge Engine independently checks the investigation.
-
-It checks for conditions such as:
-
-- Stale forecasts
-- Forecast inconsistencies
-- Invalid inventory
-- Invalid reserved inventory
-- Existing open purchase orders
-- Supplier shortages
-- Forecast gaps
-- MOQ constraints
-- Lead-time concerns
-
-The challenge result can block or caution a purchasing decision.
-
-
-### 3. Decide
-
-The Decision Stage converts the investigation and challenge results
-into a final purchasing action.
-
-Possible outcomes include:
-
-- CREATE_PURCHASE_ORDER
-- NO_PURCHASE
-- REVIEW_FORECAST
-- SUPPLIER_SHORTAGE
-- REVIEW
-
-
-### 4. Human Approval
-
-AURA does not execute a purchase automatically.
-
-A human reviewer must explicitly approve an executable purchase decision.
-
-This creates a human-in-the-loop control before financial action.
-
-
-### 5. Execute
-
-After approval, the Execution Engine:
-
-1. Creates a purchase order
-2. Records the decision ID
-3. Records supplier and product information
-4. Records quantity and price
-5. Updates store inventory
-6. Updates supplier inventory
-
-
-### 6. Validate
-
-The Validation Engine verifies that execution actually produced
-the expected state.
-
-It checks:
-
-- Purchase order exists
-- Purchase order status is correct
-- Execution record exists
-- Store inventory was updated correctly
-- Supplier inventory was updated correctly
-
-
-## 3. Demo Scenario
-
-The working demonstration uses:
-
-**Store**
-
-AURA Demo Delhi Store
-
-**Store ID**
-
-`DEMO-DEL-01`
-
-**Product**
-
-Hirono Shelter Series Blind Box
-
-**Product ID**
-
-`HIR-SHELTER-BB`
-
-**Supplier**
-
-`SUP-001`
-
-
-### Demo inputs
-
-The scenario contains:
-
-| Signal | Value |
+| Check | Value |
 |---|---:|
-| Store inventory | 10 units |
-| Reserved inventory | 0 units |
-| Sales observed | 70 units / 7 days |
-| Average daily sales | 10 units/day |
-| 7-day forecast | 60 units |
-| Forecast gap | 50 units |
-| Supplier inventory | 100 units |
-| Lead time | 4 days |
+| Current inventory | 10 |
+| 7-day sales | 70 |
+| Average daily sales | 10 |
+| Forecast | 60 |
+| Forecast gap | 50 |
+| Supplier stock | 100 |
+| MOQ | 12 |
+| Budget | ₹1,00,000 |
+| Storage capacity | 100 |
 | Unit price | ₹1,800 |
-| Open purchase orders | 0 |
 
+The original 800-unit recommendation would cost ₹14,40,000 and does not fit the available budget or storage.
 
-### AURA decision
+PROP independently calculates a requirement of **50 units**.
 
-AURA determines that additional inventory is required.
+The resulting decision is:
 
-Recommended purchase:
+- Original recommendation: 800
+- PROP recommendation: 50
+- Decision: MODIFY
+- Cost: ₹90,000
+- Human approval: Required
 
-**50 units**
+After approval, the system creates the purchase order and updates inventory and supplier stock.
 
-Estimated cost:
+The validation step then checks the expected changes.
 
-**₹90,000**
+## Architecture
 
+![PROP System Architecture](docs/architecture.png)
 
-The Challenge Engine identifies a forecast-gap warning but does not
-block the purchase because the supplier can cover the required quantity.
+### Main Components
 
-The system therefore waits for human approval.
+**Frontend**
 
+The frontend is a small web application built with HTML, CSS and JavaScript. It is used to submit recommendations, view the analysis, approve or reject the decision, and see the execution and validation results.
 
-## 4. Successful Execution
+**Backend**
 
-After human approval, AURA creates a purchase order.
+The backend is built with FastAPI.
 
-Example result:
+The main processing stages are:
 
-- Quantity: 50 units
-- Unit price: ₹1,800
-- Total cost: ₹90,000
-- Purchase order status: `CREATED`
+- Investigation Engine
+- Challenge Engine
+- Decision Stage
+- Approval Engine
+- Execution Engine
+- Validation Engine
 
-The store inventory increases from:
+**Database**
 
-`10 → 60`
+MongoDB Atlas stores the inventory, sales, forecasts, supplier information, purchase orders and execution records.
 
-The supplier inventory decreases from:
-
-`100 → 50`
-
-
-## 5. Validation Result
-
-The final validation verifies all execution conditions.
-
-The successful demo passed:
-
-- `PURCHASE_ORDER_EXISTS`
-- `PURCHASE_ORDER_STATUS`
-- `EXECUTION_RECORD`
-- `STORE_INVENTORY_UPDATED`
-- `SUPPLIER_INVENTORY_UPDATED`
-
-Final validation status:
-
-**PASSED**
-
-
-## 6. Safety Scenario
-
-AURA also supports a blocked purchasing scenario.
-
-For example, if a forecast is stale, the Challenge Engine can block
-execution and require human review rather than allowing an unsafe
-automatic purchase.
-
-This demonstrates that AURA is not only an execution system; it also
-contains a decision-challenge layer intended to catch problematic
-recommendations before financial action.
-
-
-## 7. Architecture
+## Project Structure
 
 ```text
-                    ┌─────────────────────┐
-                    │      Frontend       │
-                    │ HTML / CSS / JS     │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │      FastAPI        │
-                    │      REST API       │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │ Investigation Engine │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │  Challenge Engine   │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │   Decision Stage    │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │  Human Approval     │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │  Execution Engine   │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │ Validation Engine   │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │    MongoDB Atlas    │
-                    └─────────────────────┘
+PROP-AI-Purchasing-Agent/
+│
+├── backend/
+│   ├── main.py
+│   ├── database.py
+│   ├── seed_data.py
+│   ├── demo_scenario.py
+│   ├── requirements.txt
+│   │
+│   └── services/
+│       ├── decision_engine.py
+│       ├── challenge_engine.py
+│       ├── decision_stage.py
+│       ├── approval_engine.py
+│       ├── execution_engine.py
+│       └── validation_engine.py
+│
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+│
+├── docs/
+│   └── architecture.png
+│
+├── .gitignore
+├── README.md
+└── ...
